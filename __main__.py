@@ -31,9 +31,8 @@ stopFlag=False # если этот флаг=Истина, ордера не вы
 
 print("BTC доступно: ", "%.8f" % wallet.checkAmountOnWallet())
 print("CREX доступно: ", "%.8f" % wallet.checkAmountOnWalletCREX())
-startWallet=wallet.checkAmountOnWallet()
-print("Запускаю основной цикл. Обновление раз в 30 секунд.")
-print("Запускаю основной цикл. Торгуем на 3 минутах.")
+# startWallet=wallet.checkAmountOnWallet()
+print("Запускаю основной цикл. Обновление раз в 30 секунд. Торгуем на 3 минутах.")
 
 while (True):
 
@@ -42,16 +41,21 @@ while (True):
     bol = (4*std(data[-20:-1:])/sred[-1])/2
     interval = abs(sred[-1] - sred[-1] * (1 + bol))
 
-    # print ("болл", "%.6f" % bol)
-    # print("интервал", "%.6f" % interval)
-
-    # покупаем
+    # покупаем-продаем (восходящий тренд)
     if (getdata.currentPriceBid()<sred[-1]-interval*0.7) and (stopFlag==False):
         buy.placeOrder(float(getdata.currentPriceBid()))
         stopFlag=True
-        print("КУПИЛИ при значении: ", data[-1], " по цене ", getdata.currentPriceBid())
+        print("КУПИЛИ по цене ", getdata.currentPriceBid())
         sell.placeOrder(sred[-1]+interval)
         print("ОРДЕР НА ПРОДАЖУ по цене ", float(sred[-1]*(1+bol)))
+
+    # продаем-покупаем (нисходящий тренд)
+    if (getdata.currentPriceBid()>sred[-1]+interval*0.7) and (stopFlag==False):
+        sell.placeOrder(float(getdata.currentPriceBid()))
+        stopFlag=True
+        print("ПРОДАЛИ по цене ", getdata.currentPriceBid())
+        buy.placeOrder(sred[-1]-interval)
+        print("ОРДЕР НА ПОКУПКУ по цене ", float(sred[-1]*(1+bol)))
 
     if orders.checkExistingOrders()!=0:
         stopFlag==True
@@ -59,14 +63,15 @@ while (True):
         stopFlag=False
         print("В кошельке стало", "%.8f" % float(wallet.checkAmountOnWallet()), " BTC.")
         print("В кошельке стало", "%.8f" % float(wallet.checkAmountOnWalletCREX()), " CREX.")
-    #         startWallet=wallet.checkAmountOnWallet()
 
     print(time.asctime()," ", end = '')
     print("stopflag: ", stopFlag, " ", end ='')
-    print("BID: ", "%.6f" % getdata.currentPriceBid()," ", end = '')
-    print("ASK: ", "%.6f" % getdata.currentPriceAsk(), " ", end='')
-    print("EMA: ", "%.6f" % sred[-1]," ", end = '')
-    print("Вбол: ", "%.6f" % (sred[-1]*(1+bol))," ", end = '')
-    print("Нбол: ", "%.6f" % (sred[-1]*(1-bol)))
+    print("Есть ордер ", orders.checkExistingOrders())
 
-    time.sleep(10)
+    # print("BID: ", "%.6f" % getdata.currentPriceBid()," ", end = '')
+    # print("ASK: ", "%.6f" % getdata.currentPriceAsk(), " ", end='')
+    # print("EMA: ", "%.6f" % sred[-1]," ", end = '')
+    # print("Вбол: ", "%.6f" % (sred[-1]*(1+bol))," ", end = '')
+    # print("Нбол: ", "%.6f" % (sred[-1]*(1-bol)))
+
+    time.sleep(30)
